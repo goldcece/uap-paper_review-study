@@ -6,25 +6,117 @@ by Karen Simonyan & Andrew Zisserman
 
 ----------------------------------------------------------
 Abstract
-- 목적 
-- 방법
+- 목적:
+  대규모 이미지 인식 (large-scale image recognition) 세팅에서 컨볼루션 네트워크의 깊이가 정확도에 미치는 영향 연구
+
+- 방법:
+  매우 작은 컨볼루션 필터(3*3) 아키텍쳐를 사용하여 깊이가 증가하는 네트워크를 철저히 평가
+
+- 결과:
+  깊이를 16~19개의 가중치 레이어로 쌓을 때 기존의 구조에서보다 상당한 성능 개선이 있었다.
+  ImageNet Challenge 2014에 제출, localization 1위, classification 2위 
+  또한 다른 데이터셋에서도 잘 일반화 되었다. (SOTA 달성)
+  대규모 이미지 분류 시스템의 테스트베드 역할
 
 
-Introduction
+1. Introduction
+- 모든 레이어에 매우 작은 (3*3) 컨볼루션 필터(=receptive field)를 사용하기 때문에 가능한 컨볼루션 레이어를 더 추가하여 네트워크의 깊이를 꾸준히 늘린다.
+- 나머지 논문은 다음과 같이 구성되어 있다. 
+    2절에서, 우리는 ConvNet 구성을 설명한다. 
+    3절에서 이미지 분류 훈련 및 평가의 세부 사항 제시한다. 
+    4절에서 그 구성을 ILSVRC 분류 작업을 기반으로 비교한다. 
+    5절은 결론을 낸다.  
+    부록 A 에서 ILSVRC-2014 객체 localisation 시스템을 설명하고 평가하고, 
+    부록 B 의 다른 데이터 세트에 대한 매우 깊은 기능의 일반화에 대해 논의합니다. 
+    부록 C 에는 주요 논문 개정 목록이 포함되어 있다.
 
 
+2. ConvNet configuration
+- 모든 ConvNet 레이어구성은 Ciresan(2011), Alex Krizhevsky(2012)외 등 에서 영감을 받아 동일한 원칙으로 설계. 
+  2.1절 에서, 우리는 먼저 ConvNet 구성의 일반적인 레이아웃을 설명합니다.
+  2.2절 에서 평가에 사용된 특정 구성을 자세히 설명한다 . 
+  2.3절 에서 선택한 디자인을 선행기술과 함께 논의하고 비교해봅니다.
+- 2.1 Architecture
+  - conv layer > 3개의 FC layer > softmax() layer
+  - input : 224 * 224 RGB 이미지
+  - 유일한 사전 처리는 각 픽셀에서 훈련세트에서 계산된 평균 RGB 값을 빼는 것
+  - 3 * 3 filter 
+  - stirde = 1 , padding = 1
+  - [conv layer > max pooling layer] 에 의해 수행. 단, 모든 레이어가 max pooling을 따르는 것은 아님
+  - max pooling 은 stride = 2 와 함께 2*2 pixel window 에서 수행됨. 
+  - 모든 hidden layer 의 활성화 함수는 ReLU
+  - RLN(alexnet) 정규화 사용하지 않는다.
+- 2.2 Configuration
+  - 모든 구조는 2.1에 제시된 일반적인 디자인을 따르며 깊이만 달라진다.
+  - network A
+    11 weight layer(8 conv layer(64->128->256->512) + 3 FC layer)
+    # of parameters = 133
+  - network C
+    16 weight layer(13 conv layer + 3 FC layer)
+    3~5번 째 conv block(conv+maxpooling)의 경우 마지막 conv layer가 conv3 이 아닌 conv1 이다.
+    # of parameters = 134
+  - network D
+    network C와 거의 동일하고, 모든 conv layer 가 conv3 임.
+    # of paramters = 138
+  - network E
+    19 weight layers(16 conv layer + 3 FC layer)
+    # of parameters = 144
+- 2.3 Discussion
+  - 단일 7*7 layer 대신 3개의 3*3 layer 를 사용할 때 얻는 이득 
+  1) ReLU non-linear를 여러 개 사용할 수 있다. 
+  Conv 레이어에서 필터 크기를 3x3으로 한 경우, 큰 필터로 구성한 것보다 여러 레이어로 나누었기 때문에 중간에 ReLU 비선형(non-linearity)을 더 많이 들어갈 수 있다. 
+  따라서 decision function이 잘 학습될 수 있다.
+  2) 파라미터의 수를 줄일 수 있으므로, 정규화(regularization) 문제를 줄일 수 있다.
+  VGG-Net의 구성
+   5x5 filter 1개 = 3x3 filter 2개 (2 strides)  
+   7x7 filter 1개 = 3x3 filter 3개 (2 strides)
+  모든 레어어가 c개의 Channel을 가질 경우, 파리미터를 계산하다면 다음과 같다.
+  5x5 Conv Layer = 5^2xc^2 = 25xc^2
+  3x3 Conv Layer (2 strides) = 2x(3^3xc^2) = 18xc^2
+  -> 5x5 conv 사용 시, 3x3 conv 보다 파라미터 수가 39% 증가
+  
+  7x7 Conv Layer = 7^2xc^2 = 49xc^2
+  3x3 Conv Layer (2 strides) = 3x(3^3xc^2) = 27xc^2
+  -> 7x7 conv 사용 시, 3x3 conv 보다 파라미터 수가 81% 증가
 
-ConvNet configuration
+
+3. Classification framework
+- 3.1 Training
+  minibatch gradient descent 사용
+  batch_size=256
+  momentum=0.9
+  FC layer dropout=0.5 
+  learning_rate=1e-2
+  epoch=
+  data augmentation = 224*224 randdom crop > horizontal filp, RGBshift
+  image rescaling??? S?? Q??? -> 아직 이해하지 못했다.
+- 3.2 Testing
+  결과는 클래스 수와 동일한 채널 수를 가진 클래스 확률 점수(sum pooling)
 
 
+4. Classification Experiments
+- dataset : ILSVRC-2012 이미지 데이터셋을 분류
+- 평가지표 : 예측 클래스 다항식 분포를 사용하여 예측된 타겟 라벨이 정답 라벨과 일치한 횟수를 평가된 데이터포인트 수로 나눈 값으로 계산
+  top-1 error : 확률이 가장 높은 클래스가 정답의 라벨과 동일한지 확인. 정답과 일치한다면 0% 
+  top-5 error : 확률이 가장 높은 5개의 클래스 중에 정답 라벨이 있는지 확인. 
+- 4.1 Single-Scale Evaluation
+  - 개별 convNet 모델의 성능을 평가
+  - Normalization 사용 안함
+  - depth 가 증가함에 따라 classification 오류가 감소
+    : 추가적인 ReLU 가 도움이 되며, non-trival receptive fields 를 가진 conv 필터를 사용하여 공간적 맥락을 캡쳐하는 것도 중요함
+  - 작은 필터를 사용한 깊은 데트워크의 성능 > 큰 필터를 사용한 얕은 네트워크의 성능
+  - 고정된 가장 작은 면 S=[256;512] 이미지가 고정된 작은 면(S=256, S=384) 이미지보다 더 나은 결과를 보여줌
+- 4.2 multi-Scale Evaluation
+  - 테스트시 스케일 지터링의 영향을 평가
+  - 테스트 이미지의 여러 재조정된 버전(서로 다른 Q값)을 넣고 학습
+  - 결과 : 스케일 지터링의 성능이 고정된 가장 작은 측면 S로 훈련하는 것보다 더 좋다
+- 4.3 Multi-crop Evaluation
+  - dense vs. multi-crop 
+  - multi-crop을 사용하는 것이 약간 더 나은 결과, 두 접근법을 조합하여 사용하는 것이 성능이 좋음.
+    why? 컨볼루션 경계 조건의 처리방식이 다르기 때문일 것
+- 4.4 convNet Fusion
+  - 단일 모델 최고 성능(Network E)은 오류율 7.1%
+  - 모델의 결과를 앙상블 했을 경우(Network D&E) 오류율 6.8%
 
-
-Classification framework
-
-
-
-Classification Experiments
-
-
-
-Conclusion
+5. Conclusion
+- layer 깊이가 분류의 정확도를 높이는데 기여함
