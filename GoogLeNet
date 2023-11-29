@@ -1,0 +1,70 @@
+[paper review]
+
+**GoogLeNet** aka Inception
+
+-----------------------------------------------------------
+
+Going Deeper with Convolutions(2014)
+by Christian Szegedy, Wei Liu, Yangqing Jia, Pierre Sermanet, Scott Reed, Dragomir Anguelov, Dumitru Erhan, Vincent Vanhoucke, Andrew Rabinovich
+
+Abstract
+목적: 네트워크의 컴퓨팅 리소스를 향상시키는 구조를 설계하여, 컴퓨팅 리소스를 유지하면서 네트워크의 depth 와 width를 증가시킬 수 있도록 함
+방법: 
+- 아키텍쳐는 헵의 이론과 멀티스케일 처리의 직관에 기반함
+  - 헵의 이론: 연결주의(connectionism) ; 인간의 마음 현상(인간의 마음, 인지적 능력)이란 단순하고 병렬적인 계산 요소의 대규모로 연결망으로 봄
+    - 인간의 뉴런의 작용이 어떻게 학습과 같은 과정에 기여하는가? -> 함께 발화하는 세포들은 연결된다. 학습은 뉴런들 사이에 새로운 연결을 만드는 활동이며, 기억은 이러한 연결을 강화하고 유지하는 장치이다.
+    - 두 뉴런이 서로 반복적이고 지속적으로 점화하여 어느 한쪽 또는 양쪽 모두에 어떤 변화를 만든다 -> 상호간의 점화의 효율(=가중치의 변화)이 점점 커짐
+    - 시냅스를 통한 신경세포의 상호작용이 증가할수록 두 시냅스가 더 견고하게 강화됨. 상호작용이 감소하면 시냅스가 약해져서 신경회로를 사용하지 않게 됨.
+    - 새로운 것을 배울 때, 뇌 기억 시스템은 기존의 신경망에 새로운 연결을 추가함. 
+    - 새로운 정보와 연결된 회로는 강화되며(가중치 증가) 이 때 활성화 되지 않는 뉴런들은 연결이 약해지고(가중치 감소), 이런 과정의 반복을 통해 기억이 형성
+    - cell assembly
+- 22개 층으로 된 심층 네트워크 구성
+결과:ILSVRC2014 에 제출 classification and detection
+
+
+
+1. Introduction
+- AlexNet(2012) 의 아키텍쳐보다 12배 적은 파라미터를 사용하면서도 훨씬 더 정확한 모델
+  - AlexNet 60M 
+  - VGGNet 110M
+  - GoogLeNet 4M
+- detection에서의 큰 성과
+- 알고리즘의 효율성, 특히 전력 및 메모리 사용량에서 효과적 
+- 더 깊이 들어간다는 의미로 CODE NAME : Inception 
+
+
+2. Related Work
+- 최근의 추세는, 과적합 문제를 해결하기 위해 Dropout 을 사용하며 레이어 수와 레이어 크기를 늘린다.
+- MaxPooling layer 가 정확한 spatial information 손실을 초래한다는 단점이 있으나, AlexNet 등의 성능이 좋음
+- GoogLeNet 모델은 Inception layer가 여러번 반복되어 22개의 층을 쌓음
+스ㅠㅡㄹ
+
+3. Motivation and High Level Considerations
+
+
+
+4. Architectural Details
+
+
+
+5. GoogLeNet
+
+
+
+6. Training Methodology
+
+
+
+7. ILSVRC 2014 Classification Challenge Setup and Results
+
+
+
+8. ILSVRC 2014 Detection Challenge Setup and Results
+
+
+
+9. Conclusions
+
+
+
+10. Acknowledgements
